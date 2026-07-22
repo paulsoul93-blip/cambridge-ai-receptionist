@@ -2,33 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
-    <script>
-      (function() {
-        // Intercept window.fetch overwrite attempts
-        try {
-          let currentFetch = window.fetch;
-          const handler = {
-            get: function() { return currentFetch; },
-            set: function(val) { 
-              console.warn("Intercepted fetch overwrite, substituting gracefully."); 
-              currentFetch = val;
-            },
-            configurable: true,
-            enumerable: true
-          };
-          Object.defineProperty(window, 'fetch', handler);
-          Object.defineProperty(globalThis, 'fetch', handler);
-        } catch (e) {
-          console.error("Fetch intercept error:", e);
-        }
-      })();
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Cambridge AI Receptionist | Smart Voice Assistant for Local Businesses</title>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>
-
