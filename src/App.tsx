@@ -4,7 +4,6 @@
  */
 
 import { motion, useScroll, useTransform, AnimatePresence, useSpring, useMotionValue } from 'motion/react';
-import Lenis from 'lenis';
 import { 
   Phone,
   Zap, 
@@ -439,7 +438,7 @@ const AnimatedBackground = () => {
     
     const initParticles = () => {
       particles = [];
-      const numParticles = Math.min(Math.floor((w * h) / 10000), 200); // Responsive density
+      const numParticles = Math.min(Math.floor((w * h) / 30000), 64); // Keep the ambient field light enough for smooth scrolling
       
       for (let i = 0; i < numParticles; i++) {
         // Distribute in a wide 3D space
@@ -462,7 +461,11 @@ const AnimatedBackground = () => {
     let angleX = 0;
     let angleY = 0;
 
-    const animate = () => {
+    let lastFrame = 0;
+    const animate = (timestamp: number) => {
+      animationFrameId = requestAnimationFrame(animate);
+      if (document.hidden || timestamp - lastFrame < 40) return;
+      lastFrame = timestamp;
       ctx.clearRect(0, 0, w, h);
       
       // Extremely slow, elegant rotation
@@ -548,10 +551,9 @@ const AnimatedBackground = () => {
         }
       }
 
-      animationFrameId = requestAnimationFrame(animate);
     };
 
-    animate();
+    animationFrameId = requestAnimationFrame(animate);
 
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -563,8 +565,8 @@ const AnimatedBackground = () => {
     <div className="fixed inset-0 z-[-15] pointer-events-none overflow-hidden bg-white/50">
       <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#001F3F 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full mix-blend-multiply opacity-80" />
-      <motion.div animate={{ rotate: 360, scale: [1, 1.1, 1] }} transition={{ duration: 80, repeat: Infinity, ease: "linear" }} className="absolute -top-[50%] -left-[50%] w-[150vw] h-[150vw] bg-[radial-gradient(ellipse_at_center,rgba(0,212,255,0.06)_0%,transparent_40%)] mix-blend-multiply" />
-      <motion.div animate={{ rotate: -360, scale: [1, 1.2, 1] }} transition={{ duration: 90, repeat: Infinity, ease: "linear" }} className="absolute -bottom-[50%] -right-[50%] w-[150vw] h-[150vw] bg-[radial-gradient(ellipse_at_center,rgba(0,102,255,0.05)_0%,transparent_40%)] mix-blend-multiply" />
+      <div className="absolute -top-[35%] -left-[30%] h-[90vw] w-[90vw] bg-[radial-gradient(ellipse_at_center,rgba(0,212,255,0.055)_0%,transparent_58%)] mix-blend-multiply" />
+      <div className="absolute -bottom-[35%] -right-[30%] h-[90vw] w-[90vw] bg-[radial-gradient(ellipse_at_center,rgba(0,102,255,0.045)_0%,transparent_58%)] mix-blend-multiply" />
     </div>
   );
 };
@@ -920,7 +922,7 @@ const Hero = () => {
               <div className="flex items-center gap-4 mb-5">
                 <div className="w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden border-2 border-brand-cyan/50 flex-shrink-0 relative shadow-lg bg-white">
                    <div className="absolute inset-0 bg-gradient-to-tr from-brand-cyan/10 to-transparent mix-blend-overlay z-10" />
-                   <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80" alt="AI Agent" className="w-full h-full object-cover" />
+                   <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80" alt="AI Agent" width="200" height="200" decoding="async" fetchPriority="high" className="w-full h-full object-cover" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -1143,7 +1145,7 @@ const ForWho = () => {
   ];
 
   return (
-    <section id="who" className="py-24 relative overflow-hidden bg-white/40 backdrop-blur-3xl">
+    <section id="who" className="py-24 relative overflow-hidden bg-white/72">
       <div className="max-w-7xl mx-auto px-6 md:px-10 relative z-20">
         <div className="mb-20 flex flex-col md:flex-row justify-between items-end gap-10">
           <div>
@@ -1195,7 +1197,7 @@ const Process = () => {
   ];
 
   return (
-    <section id="process" className="py-40 relative overflow-hidden backdrop-blur-2xl bg-brand-navy/95 border-y border-brand-navy/10">
+    <section id="process" className="py-40 relative overflow-hidden bg-brand-navy/95 border-y border-brand-navy/10">
       <div className="absolute top-0 right-0 w-[80vw] h-[80vw] border-[1px] border-white/5 rounded-full blur-[2px] opacity-20 -translate-y-1/2 translate-x-1/4 pointer-events-none" />
       <div className="absolute top-10 right-10 w-[60vw] h-[60vw] border-[1px] border-brand-cyan/20 rounded-full blur-[2px] opacity-20 -translate-y-1/2 translate-x-1/4 pointer-events-none" />
       
@@ -1251,7 +1253,7 @@ const Pricing = () => {
   ];
 
   return (
-    <section id="pricing" className="py-24 relative overflow-hidden bg-white/40 backdrop-blur-2xl">
+    <section id="pricing" className="py-24 relative overflow-hidden bg-white/72">
       <div className="max-w-7xl mx-auto px-6 md:px-10">
         <div className="flex flex-col md:flex-row justify-between items-end gap-10 mb-20">
           <div className="max-w-xl">
@@ -1308,6 +1310,10 @@ const About = () => {
                  viewport={{ once: true, margin: "-100px" }}
                  transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
                  src="/IMG_8801.JPG"
+                 width="1376"
+                 height="768"
+                 loading="lazy"
+                 decoding="async"
                  onError={(e) => {
                    (e.target as HTMLImageElement).src = '/IMG_8801.jpeg';
                    (e.target as HTMLImageElement).onerror = () => {
@@ -1449,7 +1455,7 @@ const LuxuryStats = () => {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-white/60 backdrop-blur-2xl py-12 border-t border-brand-navy/5">
+    <section className="relative overflow-hidden bg-white/76 py-12 border-t border-brand-navy/5">
       <div className="max-w-7xl mx-auto px-6 md:px-10">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
           {stats.map((s, i) => (
@@ -1469,7 +1475,7 @@ const CTA = () => {
   const t = contentDict[lang].cta;
 
   return (
-    <section id="contact" className="py-16 md:py-24 relative overflow-hidden bg-white/50 backdrop-blur-3xl">
+    <section id="contact" className="py-16 md:py-24 relative overflow-hidden bg-white/76">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10">
         <div className="bg-brand-navy p-8 sm:p-12 md:p-24 rounded-3xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12">
           <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-brand-cyan/10 to-transparent -z-0" />
@@ -1614,31 +1620,6 @@ const StickyBanner = () => {
 };
 
 const MainApp = () => {
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: 'vertical',
-      gestureOrientation: 'vertical',
-      smoothWheel: true,
-      wheelMultiplier: 1,
-      touchMultiplier: 1,
-      // @ts-ignore
-      smoothTouch: false, // Ensures native touch scrolling behavior on mobile
-    });
-
-    function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-
-    requestAnimationFrame(raf);
-
-    return () => {
-      lenis.destroy();
-    };
-  }, []);
-
   return (
     <div className="font-sans min-h-screen selection:bg-brand-cyan selection:text-brand-navy overflow-x-hidden w-full relative">
       <AnimatedBackground />
@@ -1660,29 +1641,26 @@ const MainApp = () => {
 };
 
 export default function App() {
-  const [appState, setAppState] = useState<'lang' | 'loading' | 'app'>('lang');
-  const [lang, setLang] = useState<Lang>('pl');
+  const [lang, setLangState] = useState<Lang>(() => {
+    try {
+      return window.localStorage.getItem('cambridge-language') === 'en' ? 'en' : 'pl';
+    } catch {
+      return 'pl';
+    }
+  });
+
+  const setLang = (nextLanguage: Lang) => {
+    setLangState(nextLanguage);
+    try {
+      window.localStorage.setItem('cambridge-language', nextLanguage);
+    } catch {
+      // The language still changes for this visit when storage is unavailable.
+    }
+  };
 
   return (
     <LangContext.Provider value={{ lang, setLang }}>
-      <AnimatePresence mode="wait">
-        {appState === 'lang' && (
-          <motion.div key="lang" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <LanguageSelector 
-              onSelect={(l) => {
-                setLang(l);
-                setAppState('loading');
-              }} 
-            />
-          </motion.div>
-        )}
-        {appState === 'loading' && (
-          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <LoadingScreen onComplete={() => setAppState('app')} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {appState === 'app' && <MainApp />}
+      <MainApp />
     </LangContext.Provider>
   );
 }

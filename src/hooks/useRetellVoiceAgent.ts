@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { RetellWebClient } from 'retell-client-js-sdk';
+import type { RetellWebClient } from 'retell-client-js-sdk';
 import type { Lang } from '../App';
 
 export type VoiceState =
@@ -75,9 +75,11 @@ export function useRetellVoiceAgent(language: Lang) {
     }
   }, [releaseOwnership]);
 
-  useEffect(() => {
-    mountedRef.current = true;
-    const client = new RetellWebClient();
+  const ensureClient = useCallback(async () => {
+    if (clientRef.current) return clientRef.current;
+    const { RetellWebClient: RetellClient } = await import('retell-client-js-sdk');
+    if (!mountedRef.current) return null;
+    const client = new RetellClient();
     clientRef.current = client;
 
     const onCallStarted = () => {
@@ -117,15 +119,21 @@ export function useRetellVoiceAgent(language: Lang) {
     client.on('update', onUpdate);
     client.on('error', onError);
 
+    return client;
+  }, [releaseOwnership, stop]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+
     return () => {
       mountedRef.current = false;
       abortRef.current?.abort();
-      try { client.stopCall(); } catch { /* no active call */ }
-      client.removeAllListeners();
+      try { clientRef.current?.stopCall(); } catch { /* no active call */ }
+      clientRef.current?.removeAllListeners();
       releaseOwnership();
       clientRef.current = null;
     };
-  }, [releaseOwnership, stop]);
+  }, [releaseOwnership]);
 
   const previousLanguageRef = useRef(language);
   useEffect(() => {
@@ -162,6 +170,7 @@ export function useRetellVoiceAgent(language: Lang) {
       setState('connecting');
       const controller = new AbortController();
       abortRef.current = controller;
+      const clientPromise = ensureClient();
       const response = await fetch('/api/retell/create-web-call', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -183,7 +192,9 @@ export function useRetellVoiceAgent(language: Lang) {
       }
 
       abortRef.current = null;
-      await clientRef.current?.startCall({
+      const client = await clientPromise;
+      if (!client) throw new Error('Retell client unavailable');
+      await client.startCall({
         accessToken: body.access_token,
         emitRawAudioSamples: false,
       });
@@ -199,7 +210,7 @@ export function useRetellVoiceAgent(language: Lang) {
       setState('error');
       releaseOwnership();
     }
-  }, [language, releaseOwnership]);
+  }, [ensureClient, language, releaseOwnership]);
 
   const reset = useCallback(() => {
     setError(null);

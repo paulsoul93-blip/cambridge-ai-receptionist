@@ -1,49 +1,51 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { Headphones, Mic, MonitorSmartphone, Phone, ShieldCheck, Smartphone, Sparkles, X } from 'lucide-react';
+import { AudioLines, CalendarDays, Headphones, Mic, PhoneOff, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { useLang } from '../App';
 import { useRetellVoiceAgent, type VoiceError, type VoiceState } from '../hooks/useRetellVoiceAgent';
 
 const copy = {
   en: {
     ready: 'Ready', permission: 'Microphone permission', connecting: 'Connecting securely…',
-    listening: 'Listening…', speaking: 'AI receptionist is speaking…', ended: 'Conversation ended', error: 'Unable to connect',
-    intro: 'A real-time voice demonstration with the English Cambridge AI Receptionist.',
-    disclosure: 'You are speaking with an AI, not a human.',
-    privacy: 'You are about to speak with an AI receptionist. Your voice will be processed to provide the conversation. Please do not share passwords, payment information or sensitive personal data.',
-    permissionHelp: 'Allow microphone access in your browser to begin the live conversation.',
+    listening: 'Listening…', speaking: 'Receptionist is speaking…', ended: 'Conversation ended', error: 'Unable to connect',
+    liveLabel: 'AI voice · live',
+    intro: 'Meet your AI receptionist.',
+    introBody: 'A real-time voice demonstration in English. Keep browsing — this window stays out of your way.',
+    disclosure: 'AI conversation',
+    privacy: 'Your voice is processed by Retell AI to provide this conversation. Do not share passwords, payment details, health information or other sensitive data.',
+    permissionHelp: 'Your browser is waiting for your microphone choice.',
     confirmStatus: 'Your permission',
-    confirmTitle: 'Allow microphone for this conversation?',
-    confirmBody: 'This page will ask your browser for microphone access only after you continue. The microphone is needed to connect and run the live AI conversation. You can end the call at any time.',
-    confirmProvider: 'Audio is transmitted to Retell AI to provide the conversation. Do not share passwords, payment details, health information or other sensitive data.',
-    desktopHint: 'Computer: choose “Allow” in the browser prompt near the address bar.',
-    mobileHint: 'Phone or tablet: choose “Allow” when your browser asks to use the microphone.',
-    confirm: 'Continue and allow',
-    cancel: 'Not now',
+    confirmTitle: 'Use your microphone?',
+    confirmBody: 'We will ask the browser for microphone access only after you continue. It is used solely for this live AI conversation and stops when you end or close it.',
+    browserHint: 'Next, choose “Allow” in the browser prompt — beside the address bar on desktop or on screen on mobile.',
+    confirm: 'Continue',
+    cancel: 'Cancel',
     start: 'Start live conversation', end: 'End conversation', retry: 'Try again', contact: 'Book a consultation', transcript: 'Live transcript',
+    close: 'Close AI receptionist', open: 'Open AI receptionist', maxTime: '5 min maximum',
   },
   pl: {
     ready: 'Gotowa', permission: 'Dostęp do mikrofonu', connecting: 'Bezpieczne łączenie…',
-    listening: 'Słucham…', speaking: 'Recepcjonistka AI mówi…', ended: 'Rozmowa zakończona', error: 'Nie udało się połączyć',
-    intro: 'Rozmowa głosowa na żywo z Polską Recepcjonistką Cambridge AI.',
-    disclosure: 'Rozmawiasz z AI, a nie z człowiekiem.',
-    privacy: 'Za chwilę rozpoczniesz rozmowę z recepcjonistką AI. Twój głos będzie przetwarzany w celu prowadzenia rozmowy. Nie podawaj haseł, danych płatniczych ani poufnych danych osobowych.',
-    permissionHelp: 'Zezwól przeglądarce na dostęp do mikrofonu, aby rozpocząć rozmowę.',
+    listening: 'Słucham…', speaking: 'Recepcjonistka mówi…', ended: 'Rozmowa zakończona', error: 'Nie udało się połączyć',
+    liveLabel: 'Głos AI · na żywo',
+    intro: 'Poznaj swoją recepcjonistkę AI.',
+    introBody: 'Prawdziwa rozmowa głosowa po polsku. Możesz dalej przeglądać stronę — to okno nie blokuje witryny.',
+    disclosure: 'Rozmowa z AI',
+    privacy: 'Twój głos jest przetwarzany przez Retell AI w celu prowadzenia rozmowy. Nie podawaj haseł, danych płatniczych, informacji medycznych ani innych poufnych danych.',
+    permissionHelp: 'Przeglądarka czeka na Twój wybór dotyczący mikrofonu.',
     confirmStatus: 'Twoja zgoda',
-    confirmTitle: 'Zezwolić na mikrofon podczas tej rozmowy?',
-    confirmBody: 'Dopiero po wybraniu opcji „Kontynuuj” strona poprosi przeglądarkę o dostęp do mikrofonu. Mikrofon jest potrzebny do połączenia i prowadzenia rozmowy z AI. Możesz zakończyć ją w każdej chwili.',
-    confirmProvider: 'Dźwięk jest przesyłany do Retell AI w celu prowadzenia rozmowy. Nie podawaj haseł, danych płatniczych, informacji medycznych ani innych poufnych danych.',
-    desktopHint: 'Komputer: wybierz „Zezwól” w komunikacie przeglądarki przy pasku adresu.',
-    mobileHint: 'Telefon lub tablet: wybierz „Zezwól”, gdy przeglądarka zapyta o mikrofon.',
-    confirm: 'Kontynuuj i zezwól',
-    cancel: 'Nie teraz',
-    start: 'Rozpocznij rozmowę na żywo', end: 'Zakończ rozmowę', retry: 'Spróbuj ponownie', contact: 'Umów konsultację', transcript: 'Transkrypcja na żywo',
+    confirmTitle: 'Użyć mikrofonu?',
+    confirmBody: 'Dopiero po wybraniu „Kontynuuj” poprosimy przeglądarkę o dostęp do mikrofonu. Służy on wyłącznie tej rozmowie z AI i wyłącza się po jej zakończeniu lub zamknięciu.',
+    browserHint: 'Następnie wybierz „Zezwól” w komunikacie przeglądarki — przy pasku adresu na komputerze lub na ekranie telefonu.',
+    confirm: 'Kontynuuj',
+    cancel: 'Anuluj',
+    start: 'Rozpocznij rozmowę', end: 'Zakończ rozmowę', retry: 'Spróbuj ponownie', contact: 'Umów konsultację', transcript: 'Transkrypcja na żywo',
+    close: 'Zamknij recepcjonistkę AI', open: 'Otwórz recepcjonistkę AI', maxTime: 'Maksymalnie 5 min',
   },
 } as const;
 
 function errorMessage(error: VoiceError | null, language: 'en' | 'pl') {
   const messages: Record<VoiceError, { en: string; pl: string }> = {
-    'permission-denied': { en: 'Microphone access was blocked. On a computer, use the padlock or site controls beside the address bar. On a phone, open this site in browser settings, allow Microphone, then try again.', pl: 'Dostęp do mikrofonu został zablokowany. Na komputerze użyj kłódki lub ustawień strony przy pasku adresu. Na telefonie otwórz uprawnienia tej strony w ustawieniach przeglądarki, zezwól na Mikrofon i spróbuj ponownie.' },
+    'permission-denied': { en: 'Microphone access was blocked. Use the site controls beside the address bar, allow Microphone and try again.', pl: 'Dostęp do mikrofonu został zablokowany. Użyj ustawień strony przy pasku adresu, zezwól na Mikrofon i spróbuj ponownie.' },
     'permission-unavailable': { en: 'This browser cannot provide microphone access. Try current Safari, Chrome or Edge.', pl: 'Ta przeglądarka nie udostępnia mikrofonu. Użyj aktualnego Safari, Chrome lub Edge.' },
     billing: { en: 'The live demo is temporarily unavailable because its call allowance needs attention.', pl: 'Demo na żywo jest chwilowo niedostępne z powodu limitu rozliczeniowego.' },
     'rate-limit': { en: 'Too many connection attempts. Please wait a moment before trying again.', pl: 'Zbyt wiele prób połączenia. Odczekaj chwilę i spróbuj ponownie.' },
@@ -72,6 +74,8 @@ function formatTime(seconds: number) {
   return `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
 }
 
+const waveform = [18, 32, 46, 28, 52, 36, 22];
+
 export function VoiceReceptionist() {
   const { lang } = useLang();
   const t = copy[lang];
@@ -86,20 +90,23 @@ export function VoiceReceptionist() {
     [lang, transcript],
   );
 
+  const open = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('voice-panel-opened'));
+    setIsOpen(true);
+  }, []);
+
   useEffect(() => {
-    const openPanel = () => setIsOpen(true);
+    const openPanel = () => open();
     window.addEventListener('open-retell-demo', openPanel);
     return () => window.removeEventListener('open-retell-demo', openPanel);
-  }, []);
+  }, [open]);
 
   useEffect(() => {
     document.body.classList.toggle('chat-open', isOpen);
     return () => document.body.classList.remove('chat-open');
   }, [isOpen]);
 
-  useEffect(() => {
-    setPermissionConfirmation(false);
-  }, [lang]);
+  useEffect(() => setPermissionConfirmation(false), [lang]);
 
   const requestStart = () => {
     reset();
@@ -123,116 +130,150 @@ export function VoiceReceptionist() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[100]">
+    <div className="pointer-events-none fixed bottom-4 right-4 z-[240] flex items-end gap-2.5 sm:bottom-6 sm:right-6">
       <AnimatePresence>
         {isOpen && (
           <motion.section
-            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 24 }}
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.975, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 24 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.975, y: 12 }}
+            role="dialog"
             aria-label="Cambridge AI Receptionist"
-            className="absolute bottom-16 md:bottom-20 right-0 w-[calc(100vw-3rem)] sm:w-[390px] max-h-[78vh] overflow-y-auto rounded-3xl bg-white shadow-[0_30px_80px_rgba(0,31,63,0.28)] border border-brand-navy/10"
+            className="pointer-events-auto absolute bottom-[4.25rem] right-0 flex max-h-[min(68dvh,570px)] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[1.5rem] border border-white/85 bg-white/88 text-brand-navy shadow-[0_24px_70px_rgba(0,31,63,0.24)] backdrop-blur-xl sm:bottom-[4.5rem] sm:w-[360px]"
           >
-            <header className="sticky top-0 z-10 bg-brand-navy px-5 py-4 flex items-center justify-between text-white">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-2xl bg-brand-cyan text-brand-navy flex items-center justify-center"><Sparkles className="w-5 h-5" /></div>
+            <div className="h-px shrink-0 bg-gradient-to-r from-brand-blue via-brand-cyan to-transparent" />
+            <header className="flex shrink-0 items-center justify-between gap-3 border-b border-brand-navy/7 bg-white/52 px-4 py-3.5">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-navy text-brand-cyan shadow-[0_8px_18px_rgba(0,31,63,0.16)]">
+                  <Sparkles className="h-[18px] w-[18px]" aria-hidden="true" />
+                  <span className={`absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white ${state === 'error' ? 'bg-red-500' : active ? 'bg-emerald-400' : 'bg-brand-cyan'}`} />
+                </div>
                 <div className="min-w-0">
-                  <h2 className="font-black text-sm tracking-wide truncate">Cambridge AI Receptionist</h2>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className={`w-2 h-2 rounded-full ${state === 'error' ? 'bg-red-400' : active ? 'bg-brand-cyan' : 'bg-white/50'}`} />
-                    <span aria-live="polite" className="text-[10px] font-bold uppercase tracking-widest text-white/70">{status}</span>
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-black">{lang.toUpperCase()}</span>
+                  <h2 className="truncate text-[13px] font-black tracking-[-0.015em]">Cambridge AI Receptionist</h2>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span aria-live="polite" className="truncate text-[9px] font-extrabold uppercase tracking-[0.15em] text-brand-navy/50">{status}</span>
+                    <span className="rounded-full border border-brand-blue/10 bg-brand-blue/6 px-1.5 py-0.5 text-[8px] font-black text-brand-blue">{lang.toUpperCase()}</span>
                   </div>
                 </div>
               </div>
-              <button onClick={close} aria-label={lang === 'pl' ? 'Zamknij' : 'Close'} className="w-10 h-10 rounded-full hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cyan flex items-center justify-center"><X className="w-5 h-5" /></button>
+              <button onClick={close} aria-label={t.close} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-navy/7 bg-white/55 transition-colors hover:bg-brand-navy hover:text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/25">
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
             </header>
 
-            <div className="p-6">
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
               {permissionConfirmation && (
-                <div className="text-center" role="group" aria-labelledby="microphone-consent-title">
-                  <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-brand-cyan/12 text-brand-blue">
-                    <Mic className="h-9 w-9" aria-hidden="true" />
-                  </div>
-                  <h3 id="microphone-consent-title" className="mb-3 font-display text-2xl font-black text-brand-navy">{t.confirmTitle}</h3>
-                  <p className="mb-4 text-sm leading-relaxed text-brand-navy/65">{t.confirmBody}</p>
-
-                  <div className="mb-4 rounded-2xl border border-brand-cyan/25 bg-brand-cyan/8 p-4 text-left">
-                    <p className="flex gap-2 text-xs leading-relaxed text-brand-navy/70"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" aria-hidden="true" />{t.confirmProvider}</p>
-                  </div>
-
-                  <div className="mb-4 grid grid-cols-2 gap-2">
-                    <button onClick={() => setPermissionConfirmation(false)} className="min-h-12 rounded-xl border border-brand-navy/15 px-3 text-[10px] font-black uppercase tracking-wider text-brand-navy transition-colors hover:bg-brand-gray focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/35 sm:text-xs">{t.cancel}</button>
-                    <button onClick={confirmStart} className="min-h-12 rounded-xl bg-brand-navy px-3 text-[10px] font-black uppercase tracking-wider text-white transition-colors hover:bg-brand-blue focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/35 sm:text-xs">{t.confirm}</button>
-                  </div>
-
-                  <div className="space-y-2 text-left">
-                    <div className="flex gap-3 rounded-2xl bg-brand-gray/70 p-3">
-                      <MonitorSmartphone className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" aria-hidden="true" />
-                      <p className="text-xs leading-relaxed text-brand-navy/65">{t.desktopHint}</p>
+                <div role="group" aria-labelledby="microphone-consent-title">
+                  <div className="mb-3.5 flex items-start gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-cyan/12 text-brand-blue"><Mic className="h-5 w-5" aria-hidden="true" /></div>
+                    <div>
+                      <p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-brand-blue">{t.confirmStatus}</p>
+                      <h3 id="microphone-consent-title" className="mt-1 font-display text-xl font-black tracking-[-0.035em]">{t.confirmTitle}</h3>
                     </div>
-                    <div className="flex gap-3 rounded-2xl bg-brand-gray/70 p-3">
-                      <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" aria-hidden="true" />
-                      <p className="text-xs leading-relaxed text-brand-navy/65">{t.mobileHint}</p>
-                    </div>
+                  </div>
+                  <p className="text-xs leading-[1.6] text-brand-navy/64">{t.confirmBody}</p>
+                  <div className="mt-3 flex gap-2.5 rounded-2xl border border-brand-cyan/18 bg-brand-cyan/7 p-3">
+                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" aria-hidden="true" />
+                    <p className="text-[10px] leading-relaxed text-brand-navy/60">{t.privacy}</p>
+                  </div>
+                  <p className="mt-3 text-[10px] leading-relaxed text-brand-navy/48">{t.browserHint}</p>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button onClick={() => setPermissionConfirmation(false)} className="min-h-11 rounded-xl border border-brand-navy/13 bg-white/55 px-3 text-[10px] font-extrabold uppercase tracking-[0.1em] transition-colors hover:bg-white focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/25">{t.cancel}</button>
+                    <button onClick={confirmStart} className="min-h-11 rounded-xl bg-brand-navy px-3 text-[10px] font-extrabold uppercase tracking-[0.1em] text-white shadow-[0_8px_20px_rgba(0,31,63,0.16)] transition-colors hover:bg-brand-blue focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/30">{t.confirm}</button>
                   </div>
                 </div>
               )}
 
-              {!permissionConfirmation && (state === 'idle' || state === 'requesting-permission' || state === 'connecting') && (
-                <div className="text-center">
-                  <div className="mx-auto w-20 h-20 rounded-full bg-brand-gray flex items-center justify-center relative mb-5">
-                    <Mic className="w-9 h-9 text-brand-navy" />
-                    {state === 'connecting' && <motion.span className="absolute inset-0 rounded-full border-2 border-brand-cyan" animate={reduceMotion ? undefined : { scale: [1, 1.25], opacity: [0.8, 0] }} transition={{ repeat: Infinity, duration: 1.4 }} />}
-                  </div>
-                  <h3 className="font-display text-2xl font-black text-brand-navy mb-2">{state === 'idle' ? t.intro : status}</h3>
-                  {state === 'requesting-permission' && <p className="text-sm text-brand-navy/60 mb-4">{t.permissionHelp}</p>}
-                  {state === 'idle' && (
-                    <div className="text-left rounded-2xl bg-brand-gray/60 border border-brand-navy/5 p-4 mb-5">
-                      <p className="text-xs font-black text-brand-navy mb-2 flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-brand-blue" />{t.disclosure}</p>
-                      <p className="text-xs leading-relaxed text-brand-navy/65">{t.privacy}</p>
+              {!permissionConfirmation && state === 'idle' && (
+                <div>
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-navy text-brand-cyan"><AudioLines className="h-5 w-5" aria-hidden="true" /></div>
+                    <div>
+                      <p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-brand-blue">{t.disclosure}</p>
+                      <h3 className="mt-1 font-display text-xl font-black tracking-[-0.035em]">{t.intro}</h3>
                     </div>
-                  )}
-                  {state === 'idle' && <button onClick={requestStart} className="w-full min-h-12 rounded-xl bg-brand-navy text-white text-xs font-black uppercase tracking-widest hover:bg-brand-blue focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/40 transition-colors">{t.start}</button>}
+                  </div>
+                  <p className="mt-3 text-xs leading-[1.6] text-brand-navy/64">{t.introBody}</p>
+                  <div className="mt-3 rounded-2xl border border-brand-navy/7 bg-brand-gray/62 p-3">
+                    <p className="flex gap-2 text-[10px] leading-relaxed text-brand-navy/58"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-blue" aria-hidden="true" />{t.privacy}</p>
+                  </div>
+                  <button onClick={requestStart} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-navy px-4 text-[10px] font-extrabold uppercase tracking-[0.12em] text-white shadow-[0_10px_24px_rgba(0,31,63,0.18)] transition-colors hover:bg-brand-blue focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/30">
+                    <Mic className="h-4 w-4" aria-hidden="true" />{t.start}
+                  </button>
+                  <p className="mt-2.5 text-center text-[9px] font-bold uppercase tracking-[0.15em] text-brand-navy/34">{t.maxTime}</p>
+                </div>
+              )}
+
+              {!permissionConfirmation && (state === 'requesting-permission' || state === 'connecting') && (
+                <div className="py-5 text-center">
+                  <div className="relative mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-brand-cyan/20 bg-brand-cyan/10 text-brand-blue">
+                    <Mic className="h-6 w-6" aria-hidden="true" />
+                    <motion.span className="absolute inset-0 rounded-full border border-brand-cyan/55" animate={reduceMotion ? undefined : { scale: [1, 1.25], opacity: [0.7, 0] }} transition={{ repeat: Infinity, duration: 1.35 }} />
+                  </div>
+                  <h3 aria-live="polite" className="font-display text-lg font-black">{status}</h3>
+                  <p className="mx-auto mt-2 max-w-[260px] text-xs leading-relaxed text-brand-navy/55">{state === 'requesting-permission' ? t.permissionHelp : t.introBody}</p>
                 </div>
               )}
 
               {active && (
                 <div className="text-center">
-                  <div className="flex justify-center items-center gap-1 h-20 mb-3" aria-hidden="true">
-                    {[18, 34, 50, 66, 44, 28, 54, 38, 20].map((height, index) => (
-                      <motion.span key={height + index} className="w-1.5 rounded-full bg-gradient-to-t from-brand-blue to-brand-cyan" animate={reduceMotion ? { height } : { height: [12, state === 'speaking' ? height : Math.max(16, height / 2), 12] }} transition={{ repeat: Infinity, duration: 0.8 + index * 0.05, delay: index * 0.04 }} />
+                  <div className="mb-2 flex h-14 items-center justify-center gap-1" aria-hidden="true">
+                    {waveform.map((height, index) => (
+                      <motion.span key={height} className="w-1 rounded-full bg-gradient-to-t from-brand-blue to-brand-cyan" animate={reduceMotion ? { height: Math.min(height, 24) } : { height: [8, state === 'speaking' ? height : Math.max(12, height / 2), 8] }} transition={{ repeat: Infinity, duration: 0.78 + index * 0.05, delay: index * 0.035 }} />
                     ))}
                   </div>
-                  <h3 aria-live="polite" className="font-display text-2xl font-black text-brand-navy">{status}</h3>
-                  <p className="font-mono text-sm text-brand-navy/50 mt-1 mb-5">{formatTime(elapsedSeconds)} / 05:00</p>
-                  {transcriptText && <details className="text-left rounded-xl bg-brand-gray/60 p-3 mb-4"><summary className="cursor-pointer text-xs font-black text-brand-navy">{t.transcript}</summary><p className="whitespace-pre-wrap mt-2 text-xs leading-relaxed text-brand-navy/65">{transcriptText}</p></details>}
-                  <p className="text-[11px] text-brand-navy/55 mb-4">{t.disclosure}</p>
-                  <button onClick={() => stop(false)} className="w-full min-h-12 rounded-xl bg-red-600 text-white text-xs font-black uppercase tracking-widest hover:bg-red-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-200">{t.end}</button>
+                  <h3 aria-live="polite" className="font-display text-xl font-black tracking-[-0.03em]">{status}</h3>
+                  <p className="mt-1 font-mono text-[11px] text-brand-navy/42">{formatTime(elapsedSeconds)} / 05:00</p>
+                  {transcriptText && <details className="mt-3 rounded-xl border border-brand-navy/7 bg-brand-gray/58 p-3 text-left"><summary className="cursor-pointer text-[10px] font-extrabold uppercase tracking-[0.1em]">{t.transcript}</summary><p className="mt-2 whitespace-pre-wrap text-[11px] leading-relaxed text-brand-navy/60">{transcriptText}</p></details>}
+                  <button onClick={() => stop(false)} className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-[10px] font-extrabold uppercase tracking-[0.12em] text-white transition-colors hover:bg-red-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-200">
+                    <PhoneOff className="h-4 w-4" aria-hidden="true" />{t.end}
+                  </button>
                 </div>
               )}
 
               {state === 'ended' && (
-                <div className="text-center"><Phone className="w-11 h-11 text-brand-blue mx-auto mb-4" /><h3 className="font-display text-2xl font-black text-brand-navy mb-5">{t.ended}</h3><div className="grid gap-3"><button onClick={requestStart} className="min-h-12 rounded-xl bg-brand-navy text-white text-xs font-black uppercase tracking-widest">{t.retry}</button><button onClick={contact} className="min-h-12 rounded-xl border border-brand-navy/15 text-brand-navy text-xs font-black uppercase tracking-widest">{t.contact}</button></div></div>
+                <div className="py-2 text-center">
+                  <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-cyan/12 text-brand-blue"><AudioLines className="h-5 w-5" aria-hidden="true" /></div>
+                  <h3 className="font-display text-xl font-black">{t.ended}</h3>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button onClick={requestStart} className="min-h-11 rounded-xl bg-brand-navy px-3 text-[10px] font-extrabold uppercase tracking-[0.09em] text-white">{t.retry}</button>
+                    <button onClick={contact} className="min-h-11 rounded-xl border border-brand-navy/13 px-3 text-[10px] font-extrabold uppercase tracking-[0.09em]">{t.contact}</button>
+                  </div>
+                </div>
               )}
 
               {state === 'error' && (
-                <div role="alert" className="text-center"><div className="w-12 h-12 rounded-full bg-red-50 text-red-600 mx-auto mb-4 flex items-center justify-center"><X className="w-6 h-6" /></div><h3 className="font-display text-2xl font-black text-brand-navy mb-2">{t.error}</h3><p className="text-sm leading-relaxed text-brand-navy/60 mb-5">{errorMessage(error, lang)}</p><div className="grid gap-3"><button onClick={requestStart} className="min-h-12 rounded-xl bg-brand-navy text-white text-xs font-black uppercase tracking-widest">{t.retry}</button><button onClick={contact} className="min-h-12 rounded-xl border border-brand-navy/15 text-brand-navy text-xs font-black uppercase tracking-widest">{t.contact}</button></div></div>
+                <div role="alert" className="py-2 text-center">
+                  <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-red-50 text-red-600"><X className="h-5 w-5" aria-hidden="true" /></div>
+                  <h3 className="font-display text-xl font-black">{t.error}</h3>
+                  <p className="mt-2 text-xs leading-relaxed text-brand-navy/58">{errorMessage(error, lang)}</p>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button onClick={requestStart} className="min-h-11 rounded-xl bg-brand-navy px-3 text-[10px] font-extrabold uppercase tracking-[0.09em] text-white">{t.retry}</button>
+                    <button onClick={contact} className="min-h-11 rounded-xl border border-brand-navy/13 px-3 text-[10px] font-extrabold uppercase tracking-[0.09em]">{t.contact}</button>
+                  </div>
+                </div>
               )}
             </div>
           </motion.section>
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.span initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} className="pointer-events-none hidden rounded-full border border-white/80 bg-white/78 px-3 py-2 text-[9px] font-extrabold uppercase tracking-[0.14em] text-brand-navy/62 shadow-[0_8px_24px_rgba(0,31,63,0.12)] backdrop-blur-lg sm:block">
+            {t.liveLabel}
+          </motion.span>
+        )}
+      </AnimatePresence>
       <motion.button
-        whileHover={reduceMotion ? undefined : { scale: 1.07 }}
-        whileTap={reduceMotion ? undefined : { scale: 0.95 }}
-        onClick={() => isOpen ? close() : setIsOpen(true)}
-        aria-label={lang === 'pl' ? 'Otwórz recepcjonistkę AI' : 'Open AI receptionist'}
+        whileHover={reduceMotion ? undefined : { scale: 1.05 }}
+        whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+        onClick={() => isOpen ? close() : open()}
+        aria-label={isOpen ? t.close : t.open}
         aria-expanded={isOpen}
-        className="w-16 h-16 bg-brand-navy rounded-full shadow-[0_12px_30px_rgba(0,31,63,0.35)] flex items-center justify-center border border-brand-cyan/30 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/40"
+        className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full border border-brand-cyan/30 bg-brand-navy text-white shadow-[0_14px_34px_rgba(0,31,63,0.3)] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/35"
       >
-        {isOpen ? <X className="text-white w-6 h-6" /> : <Headphones className="text-white w-7 h-7" />}
+        {isOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Headphones className="h-5 w-5" aria-hidden="true" />}
       </motion.button>
     </div>
   );

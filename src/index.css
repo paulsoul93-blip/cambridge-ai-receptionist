@@ -1,9 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-display: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   
   --color-brand-navy: #001F3F;
   --color-brand-blue: #0066FF;
@@ -17,6 +16,17 @@
     @apply antialiased text-brand-navy bg-white selection:bg-brand-cyan selection:text-brand-navy;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+  }
+
+  body {
+    min-width: 320px;
+    overflow-x: hidden;
+    text-rendering: optimizeLegibility;
   }
 
   body::before {
@@ -64,6 +74,12 @@ body.chat-open .sticky-banner-container {
   pointer-events: none !important;
 }
 
+body.chat-open .cookie-surface {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(12px) !important;
+}
+
 .radiant-glow-btn {
   animation: radiant-glow 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
@@ -93,15 +109,15 @@ body.chat-open .sticky-banner-container {
 }
 
 .glass {
-  @apply backdrop-blur-[40px] bg-white/40 border border-white/50 shadow-[0_8px_32px_rgba(0,15,30,0.04)];
+  @apply backdrop-blur-xl bg-white/50 border border-white/60 shadow-[0_8px_32px_rgba(0,15,30,0.04)];
 }
 
 .glass-dark {
-  @apply backdrop-blur-[40px] bg-brand-navy/50 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)];
+  @apply backdrop-blur-xl bg-brand-navy/65 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.32)];
 }
 
 .editorial-card {
-  @apply bg-white/80 backdrop-blur-2xl p-8 rounded-3xl shadow-[0_4px_24px_rgba(0,31,63,0.02)] border border-brand-navy/[0.03] transition-all duration-[600ms] ease-out hover:shadow-[0_20px_40px_rgba(0,212,255,0.08)] hover:-translate-y-1 hover:border-brand-cyan/30;
+  @apply bg-white/86 backdrop-blur-md p-8 rounded-3xl shadow-[0_4px_24px_rgba(0,31,63,0.02)] border border-brand-navy/[0.03] transition-all duration-[450ms] ease-out hover:shadow-[0_20px_40px_rgba(0,212,255,0.08)] hover:-translate-y-1 hover:border-brand-cyan/30;
 }
 
 .icon-box {
@@ -117,4 +133,45 @@ body.chat-open .sticky-banner-container {
 
 .editorial-btn {
   @apply px-8 py-4 rounded-sm font-bold transition-all duration-300 uppercase tracking-wider text-xs;
+}
+
+#solutions,
+#who,
+#features,
+#process,
+#pricing,
+#about,
+#contact {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .cookie-surface {
+    background: rgba(255, 255, 255, 0.97) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .glass,
+  .glass-dark,
+  .editorial-card {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
