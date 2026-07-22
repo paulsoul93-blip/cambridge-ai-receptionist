@@ -217,9 +217,9 @@ export function CookieConsent() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="cookie-settings-title"
-              className="max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-brand-navy/10 bg-white shadow-[0_30px_100px_rgba(0,31,63,0.35)]"
+              className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] border border-brand-navy/10 bg-white shadow-[0_30px_100px_rgba(0,31,63,0.35)]"
             >
-              <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-brand-navy/8 bg-white/95 px-5 py-5 backdrop-blur-xl sm:px-7">
+              <header className="z-10 flex shrink-0 items-start justify-between gap-4 border-b border-brand-navy/8 bg-white px-5 py-5 sm:px-7">
                 <div>
                   <p className="mb-1 text-[10px] font-black uppercase tracking-[0.24em] text-brand-blue">{t.eyebrow}</p>
                   <h2 id="cookie-settings-title" className="font-display text-2xl font-black text-brand-navy sm:text-3xl">{t.settingsTitle}</h2>
@@ -229,7 +229,7 @@ export function CookieConsent() {
                 </button>
               </header>
 
-              <div className="space-y-5 p-5 sm:p-7">
+              <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5 sm:p-7">
                 <p className="text-sm leading-relaxed text-brand-navy/65">{t.settingsIntro}</p>
 
                 <div className="space-y-3">
@@ -262,11 +262,12 @@ export function CookieConsent() {
                   <p className="mt-4 border-t border-white/10 pt-3 text-[11px] leading-relaxed text-white/60">{t.providerNote}</p>
                 </div>
 
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <button onClick={() => save(false, false)} className="min-h-12 rounded-xl border border-brand-navy/20 px-4 text-xs font-black uppercase tracking-wider text-brand-navy transition-colors hover:bg-brand-gray focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/35">{t.necessaryOnly}</button>
-                  <button onClick={() => save(analytics, marketing)} className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-navy px-4 text-xs font-black uppercase tracking-wider text-white transition-colors hover:bg-brand-blue focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/35"><Check className="h-4 w-4" aria-hidden="true" />{t.save}</button>
-                </div>
               </div>
+
+              <footer className="grid shrink-0 gap-2 border-t border-brand-navy/8 bg-white px-5 py-4 sm:grid-cols-2 sm:px-7">
+                <button onClick={() => save(false, false)} className="min-h-12 rounded-xl border border-brand-navy/20 px-4 text-xs font-black uppercase tracking-wider text-brand-navy transition-colors hover:bg-brand-gray focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/35">{t.necessaryOnly}</button>
+                <button onClick={() => save(analytics, marketing)} className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-navy px-4 text-xs font-black uppercase tracking-wider text-white transition-colors hover:bg-brand-blue focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/35"><Check className="h-4 w-4" aria-hidden="true" />{t.save}</button>
+              </footer>
             </motion.section>
           </motion.div>
         )}
