@@ -100,6 +100,7 @@ export function CookieConsent() {
   const [preferences, setPreferences] = useState<CookiePreferences | null>(() => readPreferences());
   const [showBanner, setShowBanner] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [voicePanelOpen, setVoicePanelOpen] = useState(false);
   const [analytics, setAnalytics] = useState(false);
   const [marketing, setMarketing] = useState(false);
 
@@ -114,14 +115,18 @@ export function CookieConsent() {
       setShowBanner(false);
     };
     const closeForVoicePanel = () => {
+      setVoicePanelOpen(true);
       setSettingsOpen(false);
       setShowBanner(preferences === null);
     };
+    const restoreAfterVoicePanel = () => setVoicePanelOpen(false);
     window.addEventListener('open-cookie-settings', openSettings);
     window.addEventListener('voice-panel-opened', closeForVoicePanel);
+    window.addEventListener('voice-panel-closed', restoreAfterVoicePanel);
     return () => {
       window.removeEventListener('open-cookie-settings', openSettings);
       window.removeEventListener('voice-panel-opened', closeForVoicePanel);
+      window.removeEventListener('voice-panel-closed', restoreAfterVoicePanel);
     };
   }, [preferences]);
 
@@ -168,7 +173,7 @@ export function CookieConsent() {
 
   return (
     <AnimatePresence>
-      {showBanner && !settingsOpen && (
+      {showBanner && !settingsOpen && !voicePanelOpen && (
         <motion.aside
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 18, scale: 0.985 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -204,7 +209,7 @@ export function CookieConsent() {
         </motion.aside>
       )}
 
-      {settingsOpen && (
+      {settingsOpen && !voicePanelOpen && (
         <motion.section
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 18, scale: 0.985 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}

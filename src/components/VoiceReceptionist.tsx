@@ -122,6 +122,7 @@ export function VoiceReceptionist() {
     setPermissionConfirmation(false);
     stop(true);
     setIsOpen(false);
+    window.dispatchEvent(new CustomEvent('voice-panel-closed'));
   };
 
   const contact = () => {
