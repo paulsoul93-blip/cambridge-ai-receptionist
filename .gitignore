@@ -6,3 +6,13 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Stray data files
+fetch-assignment.txt
+fetch-eq.txt
+fetch-matches.txt
+lock-fetch.txt
+matches.txt
+metadata.json
+
+.vercel

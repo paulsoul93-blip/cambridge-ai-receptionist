@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  
+  --color-brand-navy: #001F3F;
+  --color-brand-blue: #0066FF;
+  --color-brand-cyan: #00D4FF;
+  --color-brand-gold: #C5A059;
+  --color-brand-gray: #F4F7FA;
+}
+
+@layer base {
+  html, body {
+    @apply antialiased text-brand-navy bg-white selection:bg-brand-cyan selection:text-brand-navy;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 15% 50%, rgba(0, 212, 255, 0.04) 0%, transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(197, 160, 89, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 50% 80%, rgba(0, 102, 255, 0.03) 0%, transparent 50%);
+    z-index: -20;
+    pointer-events: none;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-[-0.04em] leading-[0.95];
+  }
+}
+
+@keyframes mesh-pulse {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3%, 3%) scale(1.05); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(2deg); }
+}
+
+@keyframes radiant-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.02), 0 0 5px rgba(0, 102, 255, 0.02); }
+  50% { box-shadow: 0 0 0 2px rgba(0, 212, 255, 0), 0 0 15px rgba(0, 212, 255, 0.08); }
+}
+
+@keyframes static-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(0, 212, 255, 0.08); }
+  50% { box-shadow: 0 0 12px rgba(0, 212, 255, 0.15); }
+}
+
+body.chat-open .sticky-banner-container {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.radiant-glow-btn {
+  animation: radiant-glow 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.static-glow {
+  animation: static-glow 3s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.mesh-bg {
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(200, 100%, 80%, 0.15) 0, transparent 40%), 
+    radial-gradient(at 50% 0%, hsla(220, 100%, 80%, 0.1) 0, transparent 40%), 
+    radial-gradient(at 100% 0%, hsla(240, 100%, 80%, 0.15) 0, transparent 40%);
+  filter: blur(100px);
+  animation: mesh-pulse 30s ease-in-out infinite;
+  z-index: -10;
+  pointer-events: none;
+}
+
+.glass {
+  @apply backdrop-blur-[40px] bg-white/40 border border-white/50 shadow-[0_8px_32px_rgba(0,15,30,0.04)];
+}
+
+.glass-dark {
+  @apply backdrop-blur-[40px] bg-brand-navy/50 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)];
+}
+
+.editorial-card {
+  @apply bg-white/80 backdrop-blur-2xl p-8 rounded-3xl shadow-[0_4px_24px_rgba(0,31,63,0.02)] border border-brand-navy/[0.03] transition-all duration-[600ms] ease-out hover:shadow-[0_20px_40px_rgba(0,212,255,0.08)] hover:-translate-y-1 hover:border-brand-cyan/30;
+}
+
+.icon-box {
+  @apply w-16 h-16 rounded-2xl bg-gradient-to-b from-white to-gray-50/50 flex items-center justify-center text-brand-navy transition-all duration-500 group-hover:scale-110 shadow-[0_10px_20px_rgba(0,31,63,0.05)] border border-brand-navy/5;
+}
+
+.text-gradient-premium {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-navy via-brand-blue to-brand-cyan;
+}
+.text-gradient-dark {
+  @apply bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50;
+}
+
+.editorial-btn {
+  @apply px-8 py-4 rounded-sm font-bold transition-all duration-300 uppercase tracking-wider text-xs;
+}
