@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { Headphones, Mic, Phone, ShieldCheck, Sparkles, X } from 'lucide-react';
+import { Headphones, Mic, MonitorSmartphone, Phone, ShieldCheck, Smartphone, Sparkles, X } from 'lucide-react';
 import { useLang } from '../App';
 import { useRetellVoiceAgent, type VoiceError, type VoiceState } from '../hooks/useRetellVoiceAgent';
 
@@ -12,6 +12,14 @@ const copy = {
     disclosure: 'You are speaking with an AI, not a human.',
     privacy: 'You are about to speak with an AI receptionist. Your voice will be processed to provide the conversation. Please do not share passwords, payment information or sensitive personal data.',
     permissionHelp: 'Allow microphone access in your browser to begin the live conversation.',
+    confirmStatus: 'Your permission',
+    confirmTitle: 'Allow microphone for this conversation?',
+    confirmBody: 'This page will ask your browser for microphone access only after you continue. The microphone is needed to connect and run the live AI conversation. You can end the call at any time.',
+    confirmProvider: 'Audio is transmitted to Retell AI to provide the conversation. Do not share passwords, payment details, health information or other sensitive data.',
+    desktopHint: 'Computer: choose “Allow” in the browser prompt near the address bar.',
+    mobileHint: 'Phone or tablet: choose “Allow” when your browser asks to use the microphone.',
+    confirm: 'Continue and allow',
+    cancel: 'Not now',
     start: 'Start live conversation', end: 'End conversation', retry: 'Try again', contact: 'Book a consultation', transcript: 'Live transcript',
   },
   pl: {
@@ -21,13 +29,21 @@ const copy = {
     disclosure: 'Rozmawiasz z AI, a nie z człowiekiem.',
     privacy: 'Za chwilę rozpoczniesz rozmowę z recepcjonistką AI. Twój głos będzie przetwarzany w celu prowadzenia rozmowy. Nie podawaj haseł, danych płatniczych ani poufnych danych osobowych.',
     permissionHelp: 'Zezwól przeglądarce na dostęp do mikrofonu, aby rozpocząć rozmowę.',
+    confirmStatus: 'Twoja zgoda',
+    confirmTitle: 'Zezwolić na mikrofon podczas tej rozmowy?',
+    confirmBody: 'Dopiero po wybraniu opcji „Kontynuuj” strona poprosi przeglądarkę o dostęp do mikrofonu. Mikrofon jest potrzebny do połączenia i prowadzenia rozmowy z AI. Możesz zakończyć ją w każdej chwili.',
+    confirmProvider: 'Dźwięk jest przesyłany do Retell AI w celu prowadzenia rozmowy. Nie podawaj haseł, danych płatniczych, informacji medycznych ani innych poufnych danych.',
+    desktopHint: 'Komputer: wybierz „Zezwól” w komunikacie przeglądarki przy pasku adresu.',
+    mobileHint: 'Telefon lub tablet: wybierz „Zezwól”, gdy przeglądarka zapyta o mikrofon.',
+    confirm: 'Kontynuuj i zezwól',
+    cancel: 'Nie teraz',
     start: 'Rozpocznij rozmowę na żywo', end: 'Zakończ rozmowę', retry: 'Spróbuj ponownie', contact: 'Umów konsultację', transcript: 'Transkrypcja na żywo',
   },
 } as const;
 
 function errorMessage(error: VoiceError | null, language: 'en' | 'pl') {
   const messages: Record<VoiceError, { en: string; pl: string }> = {
-    'permission-denied': { en: 'Microphone access was blocked. Enable it in your browser settings and try again.', pl: 'Dostęp do mikrofonu został zablokowany. Włącz go w ustawieniach przeglądarki i spróbuj ponownie.' },
+    'permission-denied': { en: 'Microphone access was blocked. On a computer, use the padlock or site controls beside the address bar. On a phone, open this site in browser settings, allow Microphone, then try again.', pl: 'Dostęp do mikrofonu został zablokowany. Na komputerze użyj kłódki lub ustawień strony przy pasku adresu. Na telefonie otwórz uprawnienia tej strony w ustawieniach przeglądarki, zezwól na Mikrofon i spróbuj ponownie.' },
     'permission-unavailable': { en: 'This browser cannot provide microphone access. Try current Safari, Chrome or Edge.', pl: 'Ta przeglądarka nie udostępnia mikrofonu. Użyj aktualnego Safari, Chrome lub Edge.' },
     billing: { en: 'The live demo is temporarily unavailable because its call allowance needs attention.', pl: 'Demo na żywo jest chwilowo niedostępne z powodu limitu rozliczeniowego.' },
     'rate-limit': { en: 'Too many connection attempts. Please wait a moment before trying again.', pl: 'Zbyt wiele prób połączenia. Odczekaj chwilę i spróbuj ponownie.' },
@@ -61,9 +77,10 @@ export function VoiceReceptionist() {
   const t = copy[lang];
   const reduceMotion = useReducedMotion();
   const [isOpen, setIsOpen] = useState(false);
+  const [permissionConfirmation, setPermissionConfirmation] = useState(false);
   const { state, error, elapsedSeconds, transcript, start, stop, reset } = useRetellVoiceAgent(lang);
   const active = state === 'listening' || state === 'speaking';
-  const status = statusLabel(state, lang);
+  const status = permissionConfirmation ? t.confirmStatus : statusLabel(state, lang);
   const transcriptText = useMemo(
     () => transcript.filter((item) => item.content).map((item) => `${item.role === 'agent' ? 'AI' : lang === 'pl' ? 'Ty' : 'You'}: ${item.content}`).join('\n'),
     [lang, transcript],
@@ -80,7 +97,22 @@ export function VoiceReceptionist() {
     return () => document.body.classList.remove('chat-open');
   }, [isOpen]);
 
+  useEffect(() => {
+    setPermissionConfirmation(false);
+  }, [lang]);
+
+  const requestStart = () => {
+    reset();
+    setPermissionConfirmation(true);
+  };
+
+  const confirmStart = () => {
+    setPermissionConfirmation(false);
+    void start();
+  };
+
   const close = () => {
+    setPermissionConfirmation(false);
     stop(true);
     setIsOpen(false);
   };
@@ -117,7 +149,37 @@ export function VoiceReceptionist() {
             </header>
 
             <div className="p-6">
-              {(state === 'idle' || state === 'requesting-permission' || state === 'connecting') && (
+              {permissionConfirmation && (
+                <div className="text-center" role="group" aria-labelledby="microphone-consent-title">
+                  <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-brand-cyan/12 text-brand-blue">
+                    <Mic className="h-9 w-9" aria-hidden="true" />
+                  </div>
+                  <h3 id="microphone-consent-title" className="mb-3 font-display text-2xl font-black text-brand-navy">{t.confirmTitle}</h3>
+                  <p className="mb-4 text-sm leading-relaxed text-brand-navy/65">{t.confirmBody}</p>
+
+                  <div className="mb-4 rounded-2xl border border-brand-cyan/25 bg-brand-cyan/8 p-4 text-left">
+                    <p className="flex gap-2 text-xs leading-relaxed text-brand-navy/70"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" aria-hidden="true" />{t.confirmProvider}</p>
+                  </div>
+
+                  <div className="mb-4 grid grid-cols-2 gap-2">
+                    <button onClick={() => setPermissionConfirmation(false)} className="min-h-12 rounded-xl border border-brand-navy/15 px-3 text-[10px] font-black uppercase tracking-wider text-brand-navy transition-colors hover:bg-brand-gray focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/35 sm:text-xs">{t.cancel}</button>
+                    <button onClick={confirmStart} className="min-h-12 rounded-xl bg-brand-navy px-3 text-[10px] font-black uppercase tracking-wider text-white transition-colors hover:bg-brand-blue focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/35 sm:text-xs">{t.confirm}</button>
+                  </div>
+
+                  <div className="space-y-2 text-left">
+                    <div className="flex gap-3 rounded-2xl bg-brand-gray/70 p-3">
+                      <MonitorSmartphone className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" aria-hidden="true" />
+                      <p className="text-xs leading-relaxed text-brand-navy/65">{t.desktopHint}</p>
+                    </div>
+                    <div className="flex gap-3 rounded-2xl bg-brand-gray/70 p-3">
+                      <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" aria-hidden="true" />
+                      <p className="text-xs leading-relaxed text-brand-navy/65">{t.mobileHint}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!permissionConfirmation && (state === 'idle' || state === 'requesting-permission' || state === 'connecting') && (
                 <div className="text-center">
                   <div className="mx-auto w-20 h-20 rounded-full bg-brand-gray flex items-center justify-center relative mb-5">
                     <Mic className="w-9 h-9 text-brand-navy" />
@@ -131,7 +193,7 @@ export function VoiceReceptionist() {
                       <p className="text-xs leading-relaxed text-brand-navy/65">{t.privacy}</p>
                     </div>
                   )}
-                  {state === 'idle' && <button onClick={start} className="w-full min-h-12 rounded-xl bg-brand-navy text-white text-xs font-black uppercase tracking-widest hover:bg-brand-blue focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/40 transition-colors">{t.start}</button>}
+                  {state === 'idle' && <button onClick={requestStart} className="w-full min-h-12 rounded-xl bg-brand-navy text-white text-xs font-black uppercase tracking-widest hover:bg-brand-blue focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/40 transition-colors">{t.start}</button>}
                 </div>
               )}
 
@@ -151,11 +213,11 @@ export function VoiceReceptionist() {
               )}
 
               {state === 'ended' && (
-                <div className="text-center"><Phone className="w-11 h-11 text-brand-blue mx-auto mb-4" /><h3 className="font-display text-2xl font-black text-brand-navy mb-5">{t.ended}</h3><div className="grid gap-3"><button onClick={() => { reset(); void start(); }} className="min-h-12 rounded-xl bg-brand-navy text-white text-xs font-black uppercase tracking-widest">{t.retry}</button><button onClick={contact} className="min-h-12 rounded-xl border border-brand-navy/15 text-brand-navy text-xs font-black uppercase tracking-widest">{t.contact}</button></div></div>
+                <div className="text-center"><Phone className="w-11 h-11 text-brand-blue mx-auto mb-4" /><h3 className="font-display text-2xl font-black text-brand-navy mb-5">{t.ended}</h3><div className="grid gap-3"><button onClick={requestStart} className="min-h-12 rounded-xl bg-brand-navy text-white text-xs font-black uppercase tracking-widest">{t.retry}</button><button onClick={contact} className="min-h-12 rounded-xl border border-brand-navy/15 text-brand-navy text-xs font-black uppercase tracking-widest">{t.contact}</button></div></div>
               )}
 
               {state === 'error' && (
-                <div role="alert" className="text-center"><div className="w-12 h-12 rounded-full bg-red-50 text-red-600 mx-auto mb-4 flex items-center justify-center"><X className="w-6 h-6" /></div><h3 className="font-display text-2xl font-black text-brand-navy mb-2">{t.error}</h3><p className="text-sm leading-relaxed text-brand-navy/60 mb-5">{errorMessage(error, lang)}</p><div className="grid gap-3"><button onClick={() => { reset(); void start(); }} className="min-h-12 rounded-xl bg-brand-navy text-white text-xs font-black uppercase tracking-widest">{t.retry}</button><button onClick={contact} className="min-h-12 rounded-xl border border-brand-navy/15 text-brand-navy text-xs font-black uppercase tracking-widest">{t.contact}</button></div></div>
+                <div role="alert" className="text-center"><div className="w-12 h-12 rounded-full bg-red-50 text-red-600 mx-auto mb-4 flex items-center justify-center"><X className="w-6 h-6" /></div><h3 className="font-display text-2xl font-black text-brand-navy mb-2">{t.error}</h3><p className="text-sm leading-relaxed text-brand-navy/60 mb-5">{errorMessage(error, lang)}</p><div className="grid gap-3"><button onClick={requestStart} className="min-h-12 rounded-xl bg-brand-navy text-white text-xs font-black uppercase tracking-widest">{t.retry}</button><button onClick={contact} className="min-h-12 rounded-xl border border-brand-navy/15 text-brand-navy text-xs font-black uppercase tracking-widest">{t.contact}</button></div></div>
               )}
             </div>
           </motion.section>

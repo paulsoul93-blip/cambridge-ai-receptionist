@@ -19,6 +19,7 @@ import {
   Twitter
 } from 'lucide-react';
 import { useState, useEffect, useRef, createContext, useContext } from 'react';
+import { CookieConsent } from './components/CookieConsent';
 import { VoiceReceptionist } from './components/VoiceReceptionist';
 
 export type Lang = 'en' | 'pl';
@@ -126,11 +127,6 @@ export const contentDict = {
     foot: {
       tag: "Ready to automate your calls?",
       btn: "Book a Demo"
-    },
-    cookie: {
-      text: "We use cookies to ensure you get the best experience on our website.",
-      accept: "Accept Cookies",
-      decline: "Decline"
     }
   },
   pl: {
@@ -233,11 +229,6 @@ export const contentDict = {
     foot: {
       tag: "Przenieś swój biznes na wyższy poziom",
       btn: "Odbierz swoje rozwiązanie"
-    },
-    cookie: {
-      text: "Korzystamy z plików cookie, aby zapewnić najlepsze doświadczenia na naszej stronie.",
-      accept: "Akceptuj",
-      decline: "Odrzuć"
     }
   }
 };
@@ -1507,6 +1498,8 @@ const CTA = () => {
 };
 
 const Footer = () => {
+  const { lang } = useLang();
+
   return (
     <footer className="bg-white pt-16 pb-24 md:pb-8 border-t border-brand-navy/5">
       <div className="max-w-[1400px] mx-auto px-6 md:px-10">
@@ -1537,8 +1530,16 @@ const Footer = () => {
               <span className="w-1 h-1 rounded-full bg-brand-cyan/50 hidden md:block" />
               <span>Globe-Sys</span>
             </div>
-            <div className="text-[9px] md:text-[10px] font-bold text-brand-navy/40 uppercase tracking-widest leading-relaxed">
-              &copy; {new Date().getFullYear()} Cambridge AI Receptionist.<br className="block md:hidden"/> All rights reserved.
+            <div className="flex flex-col items-center gap-3 text-[9px] font-bold uppercase tracking-widest text-brand-navy/40 md:items-end md:text-[10px]">
+              <p className="leading-relaxed">
+                &copy; {new Date().getFullYear()} Cambridge AI Receptionist.<br className="block md:hidden"/> {lang === 'pl' ? 'Wszelkie prawa zastrzeżone.' : 'All rights reserved.'}
+              </p>
+              <button
+                onClick={() => window.dispatchEvent(new Event('open-cookie-settings'))}
+                className="rounded-full border border-brand-navy/10 px-4 py-2 text-brand-navy/55 transition-colors hover:border-brand-cyan/50 hover:text-brand-blue focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-cyan/30"
+              >
+                {lang === 'pl' ? 'Ustawienia cookies' : 'Cookie settings'}
+              </button>
             </div>
           </div>
         </div>
@@ -1605,62 +1606,6 @@ const StickyBanner = () => {
             >
               {t.btn}
             </button>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
-
-const CookieConsent = () => {
-  const { lang } = useLang();
-  const t = contentDict[lang].cookie;
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    const consent = localStorage.getItem('cookie-consent');
-    if (!consent) {
-      setShow(true);
-    }
-  }, []);
-
-  const handleAccept = () => {
-    localStorage.setItem('cookie-consent', 'accepted');
-    setShow(false);
-  };
-
-  const handleDecline = () => {
-    localStorage.setItem('cookie-consent', 'declined');
-    setShow(false);
-  };
-
-  return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          className="fixed bottom-0 left-0 right-0 z-[200] p-4 md:p-6 pb-24 md:pb-6 pointer-events-none flex justify-center"
-        >
-          <div className="glass px-6 py-5 rounded-2xl md:rounded-full shadow-[0_20px_40px_rgba(0,31,63,0.3)] flex flex-col md:flex-row items-center gap-4 md:gap-8 pointer-events-auto border border-brand-cyan/20 bg-brand-navy/95 max-w-4xl w-full">
-            <div className="flex-1 text-white/80 text-sm font-medium leading-relaxed text-center md:text-left">
-              {t.text}
-            </div>
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <button 
-                onClick={handleDecline}
-                className="flex-1 md:flex-none px-6 py-2.5 rounded-full text-white/70 hover:text-white hover:bg-white/10 text-xs font-bold uppercase tracking-widest transition-colors"
-              >
-                {t.decline}
-              </button>
-              <button 
-                onClick={handleAccept}
-                className="flex-1 md:flex-none bg-brand-cyan text-brand-navy px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 transition-all shadow-[0_0_15px_rgba(0,212,255,0.4)] whitespace-nowrap"
-              >
-                {t.accept}
-              </button>
-            </div>
           </div>
         </motion.div>
       )}
